@@ -22,7 +22,7 @@ const EditorComponent: React.FC<EditorComponentProps> = ({
       </div>
       <Editor
         className="text-xl"
-        height="94vh"
+        height="91vh"
         onChange={onChange}
         // defaultLanguage={language}
         language={language}

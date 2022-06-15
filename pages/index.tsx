@@ -17,10 +17,10 @@ const Home: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <Navbar />
-      <div className="flex justify-center items-center  space-x-8">
+      <div className="flex justify-center items-center mx-5 space-x-8">
         <div className=" flex flex-col justify-center items-center space-y-4 ">
           <h1 className="font-extrabold text-5xl md:text-6xl text-center">
-            Code Here.{" "}
+            Code Here.{" "} 
             <span className="text-transparent bg-clip-text bg-gradient-to-br from-textpink to-textblue">
               Code Now.
             </span>

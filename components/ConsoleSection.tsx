@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import {FaTrash} from 'react-icons/fa'
 
 import Image from "next/image";
+import { v4 } from "uuid";
 
 interface ConsoleSectionProps {}
 
@@ -45,9 +46,9 @@ const ConsoleSection: React.FC<ConsoleSectionProps> = ({}) => {
   /> 
   {/* <Image src="/trash.svg" width="20px" height="20px" /> */}
   </div>
-    <div className="h-full text-black p-3 overflow-y-scroll">
+    <div className="h-full text-black px-3 pt-3">
       {
-          consoleFeed.map((feed) => <><p key={crypto.randomUUID()} className={ feed.type === "error" ? "text-red-600" : "text-white"}>{feed.msg}</p> <hr /></>)
+          consoleFeed.map((feed) => <><p key={v4()} className={ feed.type === "error" ? "text-red-600" : "text-white"}>{feed.msg}</p> <hr /></>)
       }
     </div>
     </>
