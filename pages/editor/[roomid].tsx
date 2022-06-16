@@ -3,8 +3,7 @@ import Image from "next/image";
 import { useRouter } from "next/router";
 import React, { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
-import { Socket } from "socket.io";
-import { io } from "socket.io-client";
+import { io, Socket } from "socket.io-client";
 import PrimaryButton from "../../components/Button";
 import ClientAvatar from "../../components/ClientAvatar";
 import ConsoleSection from "../../components/ConsoleSection";
@@ -24,43 +23,67 @@ const EditorContainer: React.FC<EditorProps> = ({}) => {
     "flex items-center cursor-pointer hover:bg-black justify-start w-full p-2 ";
   const [activeFile, setActiveFile] = useState("index.html");
   const [srcDoc, setSrcDoc] = useState("");
-
+  const socketRef = useRef<Socket | null>(null);
   const router = useRouter();
   const roomId = router.query.roomid;
   const { name } = useGlobalContext();
+  const [clientList, setClients] = useState([]);
 
   function handleErrors(e?: Error) {
     console.log("Socket error", e && e?.message);
     toast.error("Socket Connection failed, try again later");
     setTimeout(() => {
-      
-      router.push("/");
+    //   router.push("/");
     }, 4000);
   }
 
   useEffect(() => {
-
-    if(!name || name === ""){
-      router.push("/")
+    if (!name || name === "") {
+      router.push("/");
     }
 
-    fetch("/api/socketio")
-      .then((res) => {
-        if (res.status >= 400) handleErrors();
-      })
-      .catch((e) => toast.error(e.message))
-      .finally(() => {
-        // console.log(roomId)
-        const socket = io();
+    const init = async () => {
+      socketRef.current = await initSocket();
+      socketRef.current.on("connect_error", (err) => handleErrors(err));
+      socketRef.current.on("connect_failed", (err) => handleErrors(err));
 
-        socket.on("connect_error", (err) => handleErrors(err));
-        socket.on("connect_failed", (err) => handleErrors(err));
-
-        socket.emit(ACTIONS.JOIN, {
-          roomId,
-          username: name ? name : "",
-        });
+      socketRef.current.emit(ACTIONS.JOIN, {
+        roomId,
+        username: name ? name : "",
       });
+
+      socketRef.current.on(
+        ACTIONS.JOINED,
+        ({ clients, username, socketId }) => {
+          console.log(clients);
+          setClients(clients);
+          if (username !== name) {
+            toast.success(`${username} joined the room`);
+          }
+        }
+      );
+
+      socketRef.current.on(ACTIONS.CODE_CHANGE, ({ html,css, js}) => {
+        setHtml(html)
+        setCss(css)
+        setJs(js)
+      })
+
+      socketRef.current.on(ACTIONS.DISCONNECTED, ({username, socketId}) => {
+        toast.success(`${username} has left the room`)
+        // @ts-ignore
+        setClients((prev) => prev.filter((c) => c.socketId !== socketId))
+      })
+    };
+
+    init();
+
+    return () => {
+      socketRef.current?.disconnect();
+      socketRef.current?.off(ACTIONS.JOINED);
+      socketRef.current?.off(ACTIONS.DISCONNECTED);
+    }
+    
   }, []);
 
   const changeCode = () => {
@@ -124,18 +147,28 @@ const EditorContainer: React.FC<EditorProps> = ({}) => {
     return code;
   };
   const ChangeCodeByFileName = (fileName: string, value: string) => {
+    socketRef.current?.emit(ACTIONS.CODE_CHANGE, {
+      roomId,
+      html,
+      css,
+      js
+  });
     let code = "";
     switch (fileName) {
       case "index.html":
         setHtml(value);
+        
         break;
 
       case "style.css":
         setCss(value);
+       
         break;
 
       case "script.js":
         setJs(value);
+
+        
         break;
 
       default:
@@ -185,12 +218,17 @@ const EditorContainer: React.FC<EditorProps> = ({}) => {
             </div>
             <h3 className="mx-3 text-lg font-semibold mb-2">Connected</h3>
             <div className="px-2 w-full flex flex-wrap">
-              <ClientAvatar username="Naayan" />
-              <ClientAvatar username="patil" />
+              {clientList.map((client: any) => (
+                <ClientAvatar
+                  key={client.socketId}
+                  username={client.username}
+                />
+              ))}
+              {/* <ClientAvatar username="patil" />
               <ClientAvatar username="adad" />
               <ClientAvatar username="da" />
               <ClientAvatar username="Naaadaan" />
-              <ClientAvatar username="Naayan" />
+              <ClientAvatar username="Naayan" /> */}
             </div>
           </div>
           <div className="mx-3">
