@@ -33,8 +33,23 @@ const EditorContainer: React.FC<EditorProps> = ({}) => {
     console.log("Socket error", e && e?.message);
     toast.error("Socket Connection failed, try again later");
     setTimeout(() => {
-    //   router.push("/");
+      //   router.push("/");
     }, 4000);
+  }
+  async function copyRoomId() {
+    console.log("From cccc", html, css, js);
+
+    try {
+      await navigator.clipboard.writeText(roomId as string);
+      toast.success("Room ID has been copied to your clipboard");
+    } catch (err) {
+      toast.error("Could not copy the Room ID");
+      console.error(err);
+    }
+  }
+
+  function leaveRoom() {
+    router.push("/");
   }
 
   useEffect(() => {
@@ -55,25 +70,31 @@ const EditorContainer: React.FC<EditorProps> = ({}) => {
       socketRef.current.on(
         ACTIONS.JOINED,
         ({ clients, username, socketId }) => {
-          console.log(clients);
           setClients(clients);
           if (username !== name) {
+
             toast.success(`${username} joined the room`);
+            socketRef.current?.emit(ACTIONS.SYNC_CODE, {
+              socketId,
+              html,
+              css,
+              js,
+            });
           }
         }
       );
 
-      socketRef.current.on(ACTIONS.CODE_CHANGE, ({ html,css, js}) => {
-        setHtml(html)
-        setCss(css)
-        setJs(js)
-      })
+      socketRef.current.on(ACTIONS.CODE_CHANGE, ({ html, css, js }) => {
+        setHtml(html);
+        setCss(css);
+        setJs(js);
+      });
 
-      socketRef.current.on(ACTIONS.DISCONNECTED, ({username, socketId}) => {
-        toast.success(`${username} has left the room`)
+      socketRef.current.on(ACTIONS.DISCONNECTED, ({ username, socketId }) => {
+        toast.success(`${username} has left the room`);
         // @ts-ignore
-        setClients((prev) => prev.filter((c) => c.socketId !== socketId))
-      })
+        setClients((prev) => prev.filter((c) => c.socketId !== socketId));
+      });
     };
 
     init();
@@ -82,8 +103,7 @@ const EditorContainer: React.FC<EditorProps> = ({}) => {
       socketRef.current?.disconnect();
       socketRef.current?.off(ACTIONS.JOINED);
       socketRef.current?.off(ACTIONS.DISCONNECTED);
-    }
-    
+    };
   }, []);
 
   const changeCode = () => {
@@ -147,33 +167,50 @@ const EditorContainer: React.FC<EditorProps> = ({}) => {
     return code;
   };
   const ChangeCodeByFileName = (fileName: string, value: string) => {
-    socketRef.current?.emit(ACTIONS.CODE_CHANGE, {
-      roomId,
-      html,
-      css,
-      js
-  });
-    let code = "";
     switch (fileName) {
       case "index.html":
         setHtml(value);
-        
+        // socketRef.current?.emit(ACTIONS.CODE_CHANGE, {
+        //   roomId,
+        //   html: value,
+        //   css,
+        //   js
+        // });
+
         break;
 
       case "style.css":
         setCss(value);
-       
+        // socketRef.current?.emit(ACTIONS.CODE_CHANGE, {
+        //   roomId,
+        //   css: value,
+        //   html,
+        //   js
+        // });
+
         break;
 
       case "script.js":
         setJs(value);
+        // socketRef.current?.emit(ACTIONS.CODE_CHANGE, {
+        //   roomId,
+        //   js: value,
+        //   css,
+        //   html
 
-        
+        // });
+
         break;
 
       default:
         break;
     }
+    socketRef.current?.emit(ACTIONS.CODE_CHANGE, {
+      roomId,
+      js,
+      css,
+      html,
+    });
   };
 
   return (
@@ -232,10 +269,16 @@ const EditorContainer: React.FC<EditorProps> = ({}) => {
             </div>
           </div>
           <div className="mx-3">
-            <button className="w-full rounded-xl p-3 mb-2 font-bold bg-white text-black">
+            <button
+              onClick={copyRoomId}
+              className="w-full rounded-xl p-3 mb-2 font-bold bg-white text-black"
+            >
               Copy ROOM ID
             </button>
-            <button className="w-full rounded-xl p-3 mb-2 font-bold bg-primary text-black">
+            <button
+              onClick={leaveRoom}
+              className="w-full rounded-xl p-3 mb-2 font-bold bg-primary text-black"
+            >
               Leave
             </button>
           </div>

@@ -38,13 +38,12 @@ io.on("connection", (socket) => {
   });
 
   socket.on(ACTIONS.CODE_CHANGE, ({ roomId, html,css, js }) => {
-    console.log("html", html)
-    console.log("css", css)
-    console.log("js", js)
       socket.in(roomId).emit(ACTIONS.CODE_CHANGE, { html,css, js });
   });
 
   socket.on(ACTIONS.SYNC_CODE, ({ socketId, html,css, js }) => {
+    console.log(html,css, js)
+
       io.to(socketId).emit(ACTIONS.CODE_CHANGE, { html,css, js });
   });
 
