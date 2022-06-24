@@ -33,7 +33,7 @@ const Home: NextPage = () => {
 
         <div className=" rounded-lg border-2 overflow-hidden">
           <Image
-            src="/demo.png"
+            src="/ww1.png"
             width="800px"
             className="aspect-square"
             height="500px"
