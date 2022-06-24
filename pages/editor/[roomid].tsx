@@ -29,6 +29,19 @@ const EditorContainer: React.FC<EditorProps> = ({}) => {
   const { name } = useGlobalContext();
   const [clientList, setClients] = useState([]);
 
+  function joinEventhandler({ clients, username, socketId }: any) {
+    setClients(clients);
+    if (username !== name) {
+      toast.success(`${username} joined the room`);
+      socketRef.current?.emit(ACTIONS.SYNC_CODE, {
+        socketId,
+        html,
+        css,
+        js,
+      });
+    }
+  }
+
   function handleErrors(e?: Error) {
     console.log("Socket error", e && e?.message);
     toast.error("Socket Connection failed, try again later");
@@ -67,22 +80,7 @@ const EditorContainer: React.FC<EditorProps> = ({}) => {
         username: name ? name : "",
       });
 
-      socketRef.current.on(
-        ACTIONS.JOINED,
-        ({ clients, username, socketId }) => {
-          setClients(clients);
-          if (username !== name) {
-
-            toast.success(`${username} joined the room`);
-            socketRef.current?.emit(ACTIONS.SYNC_CODE, {
-              socketId,
-              html,
-              css,
-              js,
-            });
-          }
-        }
-      );
+      socketRef.current.on(ACTIONS.JOINED, joinEventhandler);
 
       socketRef.current.on(ACTIONS.CODE_CHANGE, ({ html, css, js }) => {
         setHtml(html);
@@ -170,35 +168,15 @@ const EditorContainer: React.FC<EditorProps> = ({}) => {
     switch (fileName) {
       case "index.html":
         setHtml(value);
-        // socketRef.current?.emit(ACTIONS.CODE_CHANGE, {
-        //   roomId,
-        //   html: value,
-        //   css,
-        //   js
-        // });
-
         break;
 
       case "style.css":
         setCss(value);
-        // socketRef.current?.emit(ACTIONS.CODE_CHANGE, {
-        //   roomId,
-        //   css: value,
-        //   html,
-        //   js
-        // });
 
         break;
 
       case "script.js":
         setJs(value);
-        // socketRef.current?.emit(ACTIONS.CODE_CHANGE, {
-        //   roomId,
-        //   js: value,
-        //   css,
-        //   html
-
-        // });
 
         break;
 
@@ -207,9 +185,9 @@ const EditorContainer: React.FC<EditorProps> = ({}) => {
     }
     socketRef.current?.emit(ACTIONS.CODE_CHANGE, {
       roomId,
-      js,
-      css,
-      html,
+      js: fileName === "script.js" ? value : js,
+      css: fileName === "style.css" ? value : css,
+      html: fileName === "index.html" ? value : html,
     });
   };
 
