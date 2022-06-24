@@ -10,6 +10,6 @@ export const initSocket = async () => {
         timeout : 10000,
         transports: ['websocket']
     }
-    return io(process.env.NEXT_APP_BACKEND_URL as string, option)
+    return io("https://codeonline-server.herokuapp.com/" as string, option)
 }
 
